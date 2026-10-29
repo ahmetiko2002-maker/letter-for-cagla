@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>A Letter for Çağla</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts: Caveat for handwriting, Space Grotesk / Courier for retro player labels -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Outfit:wght@300;400;500;600&family=Permanent+Marker&family=Special+Elite&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-cream: #fbf7ee;
+      --paper-cream: #fffef9;
+      --envelope-front: #dfcdb5;
+      --envelope-back: #caa788;
+      --envelope-flap: #ceab8c;
+      --ink: #2d2a26;
+    }
+
+    body {
+      background-color: var(--bg-cream);
+      font-family: 'Outfit', sans-serif;
+      overflow-x: hidden;
+      color: var(--ink);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .font-handwriting {
+      font-family: 'Caveat', cursive;
+    }
+
+    /* Subtle paper noise texture pattern */
+    .bg-paper-pattern {
+      background-color: #faf6ee;
+      background-image: 
+        radial-gradient(#e5dbcb 0.75px, transparent 0.75px), 
+        radial-gradient(#e5dbcb 0.75px, #faf6ee 0.75px);
+      background-size: 28px 28px;
+      background-position: 0 0, 14px 14px;
+    }
+
+    /* Envelope 3D styling & animations */
+    .envelope-perspective {
+      perspective: 1200px;
+    }
+
+    .envelope-flap {
+      transform-origin: top center;
+      transition: transform 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .envelope-flap.opened {
+      transform: rotateX(180deg);
+      z-index: 5 !important;
+    }
+
+    .letter-paper {
+      transform-origin: bottom center;
+      transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease, z-index 0.1s step-end;
+    }
+
+    .letter-paper.extracted {
+      transform: translateY(-190px) scale(1.02);
+      z-index: 40 !important;
+    }
+
+    @media (max-width: 640px) {
+      .letter-paper.extracted {
+        transform: translateY(-140px) scale(1.01);
+      }
+    }
+
+    /* Cassette reels rotating */
+    @keyframes spin-reels {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .reels-spinning {
+      animation: spin-reels 2.2s linear infinite;
+    }
+
+    /* Bean character idle animation */
+    @keyframes bean-idle {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-3px); }
+    }
+
+    .bean-bobbing {
+      animation: bean-idle 2.4s ease-in-out infinite;
+    }
+
+    /* Play button pulse */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(224, 102, 102, 0.45); }
+      70% { transform: scale(1.05); box-shadow: 0 0 0 12px rgba(224, 102, 102, 0); }
+      100% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(224, 102, 102, 0); }
+    }
+
+    .pulse-btn {
+      animation: pulse-ring 2.2s infinite;
+    }
+
+    .polaroid-card {
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+    }
+
+    .custom-scroll::-webkit-scrollbar {
+      width: 3px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #dfcbaf;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-paper-pattern min-h-screen flex flex-col justify-center items-center p-4 overflow-x-hidden relative">
+
+  <!-- Ambient Floating Music Notes -->
+  <div id="notes-container" class="fixed inset-0 pointer-events-none z-30 overflow-hidden opacity-0 transition-opacity duration-1000"></div>
+
+  <!-- MAIN INTERACTIVE STAGE -->
+  <main class="relative w-full max-w-lg flex flex-col items-center justify-center my-auto">
+    
+    <!-- ENVELOPE CONTAINER -->
+    <div class="relative w-full envelope-perspective max-w-[430px]">
+      
+      <!-- Big Envelope Outer Body -->
+      <div id="envelope-box" class="relative w-full aspect-[1.45/1] rounded-2xl bg-[#ceab8c] shadow-2xl border-4 border-[#bda084] flex items-center justify-center overflow-visible">
+        
+        <!-- Back inside layer -->
+        <div class="absolute inset-0 rounded-xl bg-[#b59273] shadow-inner"></div>
+
+        <!-- THE LETTER PAPER -->
+        <div id="letter-paper" class="letter-paper absolute w-[94%] h-[126%] top-[4%] bg-[#fffdf9] rounded-xl shadow-xl border border-[#ecd9be] p-5 sm:p-6 flex flex-col justify-between opacity-0 pointer-events-none z-10">
+          
+          <div>
+            <h2 id="letter-title" class="text-3xl sm:text-4xl font-handwriting font-bold text-amber-950">Sevgili Çağla,</h2>
+            <div id="letter-body" class="mt-3 overflow-y-auto max-h-[160px] sm:max-h-[180px] pr-2 custom-scroll text-stone-800 text-lg sm:text-xl font-handwriting leading-relaxed">
+              <!-- Dynamically populated from CONFIG -->
+            </div>
+          </div>
+
+          <!-- Letter Bottom: Simple Photo Album Trigger -->
+          <div class="pt-2 border-t border-amber-100/80 flex items-center justify-between">
+            <span id="letter-signoff" class="font-handwriting text-stone-400 text-lg">always,</span>
+            <button onclick="togglePolaroidModal(true)" class="flex items-center gap-1.5 px-3 py-1.5 bg-[#f6eee3] hover:bg-[#ebdccb] text-amber-900 rounded-full text-xs font-medium border border-amber-200 transition active:scale-95 shadow-sm">
+              <span>📷 Fotoğraflarımız</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Envelope Fold SVG Triangles -->
+        <div class="absolute inset-0 pointer-events-none z-20">
+          <svg class="absolute left-0 top-0 h-full w-1/2 drop-shadow" viewBox="0 0 200 280" preserveAspectRatio="none">
+            <polygon points="0,0 200,140 0,280" fill="#d9be9e" />
+          </svg>
+          <svg class="absolute right-0 top-0 h-full w-1/2 drop-shadow" viewBox="0 0 200 280" preserveAspectRatio="none">
+            <polygon points="200,0 0,140 200,280" fill="#d0b391" />
+          </svg>
+          <svg class="absolute bottom-0 left-0 w-full h-[58%] drop-shadow-md" viewBox="0 0 400 160" preserveAspectRatio="none">
+            <polygon points="0,160 200,30 400,160" fill="#caa788" />
+          </svg>
+        </div>
+
+        <!-- Top Flap with 3D Open -->
+        <div id="envelope-flap" class="envelope-flap absolute top-0 left-0 w-full h-[56%] z-30">
+          <svg class="w-full h-full drop-shadow-lg" viewBox="0 0 400 160" preserveAspectRatio="none">
+            <polygon points="0,0 200,160 400,0" fill="#dfcdb5" stroke="#bda084" stroke-width="2" />
+          </svg>
+        </div>
+
+        <!-- Center Play Button (The Wax Seal) -->
+        <div id="play-seal" class="absolute z-40 flex flex-col items-center justify-center cursor-pointer group">
+          <button id="main-play-btn" aria-label="Play tape and open letter" class="pulse-btn relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-rose-700 via-rose-600 to-amber-500 shadow-xl flex items-center justify-center border-4 border-amber-100 text-white transition-all transform group-hover:scale-105 active:scale-95">
+            <svg class="w-6 h-6 sm:w-7 sm:h-7 fill-current translate-x-0.5 filter drop-shadow" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ======================================================= -->
+      <!-- MINI DOODLE BEAN & COMPACT RETRO TAPE PLAYER RIG       -->
+      <!-- Scaled down (~45%), clean and cute                     -->
+      <!-- ======================================================= -->
+      <div class="absolute -bottom-10 -right-4 sm:-bottom-12 sm:-right-8 z-40 flex items-end">
+        
+        <!-- Small Cassette Player Deck -->
+        <div class="relative w-[120px] bg-[#332f2c] rounded-xl p-2 shadow-xl border-2 border-[#201d1b]">
+          <!-- Window for tape slot -->
+          <div class="relative w-full h-11 bg-[#181615] rounded-md border border-stone-700 flex items-center justify-center overflow-hidden">
+            
+            <!-- Tape inside player deck (Appears after bean inserts it) -->
+            <div id="deck-tape-instance" class="relative w-[96px] h-[34px] bg-[#433f3c] rounded p-1 flex flex-col justify-between opacity-0 transition-opacity duration-300">
+              <div class="w-full bg-[#f6eee3] rounded-sm px-1 py-0.5 flex justify-between items-center text-[6px] font-mono text-stone-800 font-bold">
+                <span>WISH YOU WERE HERE</span>
+              </div>
+              <div class="w-full flex items-center justify-around px-2">
+                <!-- Spool Left -->
+                <div class="w-3.5 h-3.5 rounded-full bg-white flex items-center justify-center reel-element">
+                  <div class="w-1.5 h-1.5 rounded-full bg-stone-900"></div>
+                </div>
+                <div class="w-4 h-1 bg-stone-800 rounded"></div>
+                <!-- Spool Right -->
+                <div class="w-3.5 h-3.5 rounded-full bg-white flex items-center justify-center reel-element">
+                  <div class="w-1.5 h-1.5 rounded-full bg-stone-900"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty slot line indicator -->
+            <div id="deck-empty-hint" class="w-10 h-0.5 bg-stone-700/80 rounded"></div>
+          </div>
+
+          <!-- Small buttons bar -->
+          <div class="flex justify-between items-center mt-1.5 px-0.5">
+            <div class="flex gap-1">
+              <span id="deck-rec-led" class="w-1.5 h-1.5 rounded-full bg-rose-500/80"></span>
+            </div>
+            <div class="flex gap-1">
+              <div id="deck-play-btn" class="w-4 h-2 bg-emerald-700 rounded-sm"></div>
+              <div class="w-4 h-2 bg-stone-700 rounded-sm"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Little Doodle Bean Guy -->
+        <div class="relative w-[90px] h-[95px] -ml-2 pointer-events-none">
+          <svg viewBox="0 0 140 140" class="w-full h-full overflow-visible">
+            <!-- Shadow -->
+            <ellipse cx="68" cy="130" rx="32" ry="7" fill="#2d2a26" opacity="0.12" />
+
+            <!-- Bean character body -->
+            <g class="bean-bobbing">
+              <!-- Feet -->
+              <path d="M 50 124 C 45 130 58 134 65 128" stroke="#2d2a26" stroke-width="3" stroke-linecap="round" fill="#fff" />
+              <path d="M 80 124 C 75 130 88 134 95 128" stroke="#2d2a26" stroke-width="3" stroke-linecap="round" fill="#fff" />
+
+              <!-- Cute Bean Body -->
+              <path d="M 70 24 
+                       C 98 24, 108 50, 102 85 
+                       C 98 115, 90 126, 70 126 
+                       C 45 126, 38 110, 40 80 
+                       C 42 45, 48 24, 70 24 Z" 
+                    fill="#fcf6ec" 
+                    stroke="#2d2a26" 
+                    stroke-width="3.5" 
+                    stroke-linejoin="round" />
+
+              <!-- Cheeks -->
+              <circle cx="53" cy="65" r="4.5" fill="#f87171" opacity="0.5" />
+              <circle cx="87" cy="65" r="4.5" fill="#f87171" opacity="0.5" />
+
+              <!-- Eyes -->
+              <ellipse cx="58" cy="56" rx="3" ry="4" fill="#2d2a26" />
+              <ellipse cx="82" cy="56" rx="3" ry="4" fill="#2d2a26" />
+
+              <!-- Smile -->
+              <path d="M 66 65 Q 70 71 74 65" stroke="#2d2a26" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+              <!-- Antenna / Heart sprout -->
+              <path d="M 70 24 Q 68 12 76 8" stroke="#2d2a26" stroke-width="2.5" stroke-linecap="round" fill="none" />
+              <circle cx="76" cy="8" r="2.5" fill="#e06666" />
+
+              <!-- Arms Holding Mini Tape -->
+              <g id="bean-arms-holding">
+                <path d="M 45 74 Q 38 88 56 94" stroke="#2d2a26" stroke-width="3" stroke-linecap="round" fill="none" />
+                <path d="M 95 74 Q 102 88 84 94" stroke="#2d2a26" stroke-width="3" stroke-linecap="round" fill="none" />
+              </g>
+
+              <!-- Arms Raised Inserting Tape -->
+              <g id="bean-arms-inserting" opacity="0">
+                <path d="M 46 72 Q 40 40 60 28" stroke="#2d2a26" stroke-width="3" stroke-linecap="round" fill="none" />
+                <path d="M 94 72 Q 98 40 78 28" stroke="#2d2a26" stroke-width="3" stroke-linecap="round" fill="none" />
+              </g>
+
+              <!-- Arms Dancing / Happy -->
+              <g id="bean-arms-dancing" opacity="0">
+                <path d="M 44 68 Q 28 48 35 34" stroke="#2d2a26" stroke-width="3" stroke-linecap="round" fill="none" />
+                <path d="M 96 68 Q 112 48 105 34" stroke="#2d2a26" stroke-width="3" stroke-linecap="round" fill="none" />
+              </g>
+            </g>
+
+            <!-- Mini Cassette Tape in Hands -->
+            <g id="mini-tape-group" style="transition: all 0.85s cubic-bezier(0.34, 1.3, 0.64, 1); transform-origin: center;">
+              <rect x="47" y="82" width="46" height="26" rx="3" fill="#3c3836" stroke="#1f1d1b" stroke-width="1.5" />
+              <rect x="52" y="85" width="36" height="11" rx="1.5" fill="#fdf6e2" />
+              <circle cx="59" cy="101" r="3.5" fill="#fff" stroke="#222" stroke-width="1" />
+              <circle cx="81" cy="101" r="3.5" fill="#fff" stroke="#222" stroke-width="1" />
+            </g>
+          </svg>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ============================================== -->
+  <!-- CLEAN POLAROID PHOTO MODAL                     -->
+  <!-- ============================================== -->
+  <div id="polaroid-modal" class="fixed inset-0 bg-stone-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="relative w-full max-w-xs flex flex-col items-center">
+      
+      <!-- Close button -->
+      <button onclick="togglePolaroidModal(false)" class="absolute -top-10 right-0 text-white/80 hover:text-white text-xl p-1">
+        ✕
+      </button>
+
+      <!-- Polaroid Stack -->
+      <div id="polaroid-stack-container" class="relative w-[260px] h-[340px] cursor-pointer" onclick="nextPolaroid()">
+        <!-- Dynamically populated from CONFIG.photos -->
+      </div>
+
+      <p class="mt-4 text-xs font-handwriting text-amber-100/80">diğer anı için dokun</p>
+    </div>
+  </div>
+
+  <!-- Audio Element -->
+  <audio id="audio-player" preload="auto">
+    <source id="audio-source" src="" type="audio/mpeg">
+  </audio>
+
+  <!-- LOGIC SCRIPT -->
+  <script>
+    /* =========================================================================
+     * 💌 YOUR CUSTOM SETTINGS (BURAYI KENDİNE GÖRE DÜZENLE)
+     * ========================================================================= */
+    const CONFIG = {
+      // 1. Şarkı Dosyası: index.html ile aynı klasördeki mp3 dosyasının adı veya linki
+      musicSrc: 'wish-you-were-here.mp3',
+
+      // 2. Mektup Başlığı ve Paragrafları
+      letterTitle: 'Hayatımın Anlamı,',
+      letterParagraphs: [
+        'Beraber geçirdiğimiz her saniye sana ve ilişkimize çok minnettarım. Başıma gelen en güzel şeysin. Her zaman yanımda oldun, her şeyin üstesinden beraber geldik ve beraber yapamayacağımız hiçbir şey yok. Hayatımın en sıcak anlarını hep senin yanındayken hissettim. Anılarımız aklımdan bir film şeridi gibi geçiyor. Keşke yanımda olsaydın.',
+        'İyi ki varsın. Seni çok seviyorum ❤️'
+      ],
+      letterSignOff: 'loyl,',
+
+      // 3. Fotoğrafların & Yazıları
+      // İster aynı klasöre koyduğun fotoların adını yaz ('foto1.jpg'), ister internet linki koy
+      photos: [
+    { src: 'biz1.jpg', },
+    { src: 'biz2.jpg', },
+    { src: 'biz3.jpg', }
+    { src: 'biz4.jpg', },
+    { src: 'biz5.jpg', },
+    { src: 'biz6.jpg', }
+    { src: 'biz7.jpg', },
+    { src: 'biz8.jpg', },
+    
+
+  ]
+    };
+
+    /* =========================================================================
+     * INITIALIZATION (BİLEŞENLERİ DOLDURMA)
+     * ========================================================================= */
+    // Mektubu doldur
+    document.getElementById('letter-title').textContent = CONFIG.letterTitle;
+    document.getElementById('letter-signoff').textContent = CONFIG.letterSignOff;
+    const letterBodyEl = document.getElementById('letter-body');
+    letterBodyEl.innerHTML = CONFIG.letterParagraphs.map(p => `<p class="mb-3">${p}</p>`).join('');
+
+    // Müziği ayarla
+    const audioSource = document.getElementById('audio-source');
+    audioSource.src = CONFIG.musicSrc;
+    const audioPlayer = document.getElementById('audio-player');
+    audioPlayer.load();
+
+    // Fotoğrafları doldur
+    const polaroidContainer = document.getElementById('polaroid-stack-container');
+    polaroidContainer.innerHTML = '';
+    const initialRotations = [2, -3, 3, -2, 1];
+
+    CONFIG.photos.forEach((photo, index) => {
+      const rot = initialRotations[index % initialRotations.length];
+      const zIndex = (CONFIG.photos.length - index) * 10;
+      
+      const card = document.createElement('div');
+      card.className = 'polaroid-card absolute inset-0 bg-[#fffdfa] p-3 pb-6 rounded-sm shadow-2xl border border-stone-200 flex flex-col justify-between';
+      card.style.transform = `rotate(${rot}deg)`;
+      card.style.zIndex = zIndex;
+
+      card.innerHTML = `
+        <div class="w-full h-[240px] overflow-hidden rounded-sm bg-stone-100 flex items-center justify-center">
+          <img src="${photo.src}" alt="photo" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://placehold.co/400x500/f5ebe0/43281c?text=Foto%C4%9Fraf';" />
+        </div>
+        <div class="pt-2 text-center">
+          <p class="font-handwriting text-stone-700 text-lg font-bold">${photo.caption}</p>
+        </div>
+      `;
+      polaroidContainer.appendChild(card);
+    });
+
+    let isPlaying = false;
+    let isSequenceTriggered = false;
+    let audioContext = null;
+    let synthTimer = null;
+
+    // DOM Elements
+    const mainPlayBtn = document.getElementById('main-play-btn');
+    const playSeal = document.getElementById('play-seal');
+    const envelopeFlap = document.getElementById('envelope-flap');
+    const letterPaper = document.getElementById('letter-paper');
+    const miniTapeGroup = document.getElementById('mini-tape-group');
+    const beanArmsHolding = document.getElementById('bean-arms-holding');
+    const beanArmsInserting = document.getElementById('bean-arms-inserting');
+    const beanArmsDancing = document.getElementById('bean-arms-dancing');
+    const deckTapeInstance = document.getElementById('deck-tape-instance');
+    const deckEmptyHint = document.getElementById('deck-empty-hint');
+    const deckPlayBtn = document.getElementById('deck-play-btn');
+    const deckRecLed = document.getElementById('deck-rec-led');
+    const notesContainer = document.getElementById('notes-container');
+    const polaroidModal = document.getElementById('polaroid-modal');
+
+    function triggerLetterSequence() {
+      if (isSequenceTriggered) return;
+      isSequenceTriggered = true;
+
+      // 1. Bean raises arms
+      beanArmsHolding.style.opacity = '0';
+      beanArmsInserting.style.opacity = '1';
+
+      // 2. Mini cassette slides into the small player slot to the left
+      miniTapeGroup.style.transform = 'translate(-70px, -24px) scale(0.65)';
+      miniTapeGroup.style.opacity = '0.9';
+
+      // 3. Insert and start player
+      setTimeout(() => {
+        miniTapeGroup.style.opacity = '0';
+        deckEmptyHint.style.display = 'none';
+        deckTapeInstance.style.opacity = '1';
+
+        // Animate bean dance
+        beanArmsInserting.style.opacity = '0';
+        beanArmsDancing.style.opacity = '1';
+
+        // Cassette lights & reels spin
+        deckRecLed.classList.add('animate-pulse');
+        deckPlayBtn.classList.replace('bg-emerald-700', 'bg-emerald-500');
+        document.querySelectorAll('.reel-element').forEach(el => el.classList.add('reels-spinning'));
+
+        // Start music & floating notes
+        startAudioPlayback();
+        notesContainer.style.opacity = '1';
+        startFloatingNotes();
+
+        // 4. Open envelope & unfold letter
+        setTimeout(() => {
+          playSeal.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
+          playSeal.style.transform = 'scale(0.2)';
+          playSeal.style.opacity = '0';
+          setTimeout(() => { playSeal.style.display = 'none'; }, 400);
+
+          envelopeFlap.classList.add('opened');
+
+          setTimeout(() => {
+            letterPaper.style.opacity = '1';
+            letterPaper.style.pointerEvents = 'auto';
+            letterPaper.classList.add('extracted');
+          }, 450);
+
+        }, 500);
+
+      }, 850);
+    }
+
+    mainPlayBtn.addEventListener('click', triggerLetterSequence);
+
+    // Audio & Synthesizer Fallback
+    function initAudioContext() {
+      if (!audioContext) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioCtx();
+      }
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+    }
+
+    function startAudioPlayback() {
+      initAudioContext();
+      isPlaying = true;
+
+      const playPromise = audioPlayer.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          playWishYouWereHereSynthTheme();
+        });
+      }
+    }
+
+    function playPluck(freq, delayTime = 0, duration = 2.2) {
+      if (!audioContext || audioContext.state === 'suspended') return;
+      const startTime = audioContext.currentTime + delayTime;
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      const filter = audioContext.createBiquadFilter();
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(2000, startTime);
+      filter.frequency.exponentialRampToValueAtTime(350, startTime + duration);
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, startTime);
+
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.linearRampToValueAtTime(0.16, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioContext.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.1);
+    }
+
+    function playWishYouWereHereSynthTheme() {
+      if (synthTimer) clearInterval(synthTimer);
+      const chords = [
+        [164.81, 246.94, 329.63, 392.00],
+        [196.00, 246.94, 293.66, 392.00],
+        [164.81, 246.94, 329.63, 392.00],
+        [220.00, 293.66, 329.63, 440.00]
+      ];
+      let chordIndex = 0;
+      function strum() {
+        if (!isPlaying) return;
+        chords[chordIndex % chords.length].forEach((f, i) => playPluck(f, i * 0.18, 2.5));
+        chordIndex++;
+      }
+      strum();
+      synthTimer = setInterval(strum, 3500);
+    }
+
+    // Floating notes
+    function startFloatingNotes() {
+      const symbols = ['♪', '♫', '♬', '✨', '🤍'];
+      setInterval(() => {
+        if (!isPlaying) return;
+        const note = document.createElement('div');
+        note.className = 'absolute font-serif text-amber-900/40 pointer-events-none select-none';
+        note.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+        note.style.left = `${Math.random() * 80 + 10}%`;
+        note.style.bottom = '15%';
+        note.style.fontSize = `${Math.random() * 14 + 16}px`;
+        note.style.transition = 'all 4s cubic-bezier(0.1, 0.8, 0.3, 1)';
+        note.style.opacity = '0.6';
+
+        notesContainer.appendChild(note);
+
+        setTimeout(() => {
+          note.style.transform = `translateY(-${Math.random() * 260 + 180}px) rotate(${Math.random() * 50 - 25}deg)`;
+          note.style.opacity = '0';
+        }, 30);
+
+        setTimeout(() => note.remove(), 4200);
+      }, 1000);
+    }
+
+    // Polaroid Modal Functions
+    function togglePolaroidModal(show) {
+      if (show) {
+        polaroidModal.classList.remove('opacity-0', 'pointer-events-none');
+        polaroidModal.classList.add('opacity-100', 'pointer-events-auto');
+      } else {
+        polaroidModal.classList.add('opacity-0', 'pointer-events-none');
+        polaroidModal.classList.remove('opacity-100', 'pointer-events-auto');
+      }
+    }
+
+    function nextPolaroid() {
+      const container = document.getElementById('polaroid-stack-container');
+      const cards = container.querySelectorAll('.polaroid-card');
+      if (cards.length <= 1) return;
+
+      const topCard = cards[0];
+      topCard.style.transform = 'translateX(160px) rotate(20deg) scale(0.9)';
+      topCard.style.opacity = '0.2';
+
+      setTimeout(() => {
+        container.appendChild(topCard);
+        const updatedCards = container.querySelectorAll('.polaroid-card');
+        const rotations = [-3, 3, -1, 2, -2];
+        updatedCards.forEach((c, idx) => {
+          c.style.zIndex = (updatedCards.length - idx) * 10;
+          c.style.transform = `rotate(${rotations[idx % rotations.length]}deg)`;
+          c.style.opacity = '1';
+        });
+      }, 240);
+    }
+  </script>
+</body>
+</html>
